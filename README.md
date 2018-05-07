@@ -2,7 +2,7 @@
 
 Golang SDK for Xiaomi File Data Storage.
 
-# install
+## install
 
 <mark>内部用户请不要使用go get 方式获取，直接克隆代码即可</mark>
 
@@ -10,9 +10,9 @@ Golang SDK for Xiaomi File Data Storage.
 go get github.com/XiaoMi/galaxy-fds-sdk-golang
 ```
 
-#example
+## example
 
-```
+```go
 package main
 
 import (
@@ -52,7 +52,7 @@ func main() {
 
 ```
 
-# Changes
+## Changes
 
 20170822:
 > 1. 修正README.md example中的错误
