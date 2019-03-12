@@ -631,7 +631,7 @@ func (c *FDSClient) Download_Object(bucketname, objectname, filename string) (*s
 		Content_Type: "",
 		Headers:      &headers,
 	}
-	var i int64
+	var i int64 = 0
 	// 如果要下载的文件大于50MB，则按照每个50MB分段下载，最后一个分片可以小于50MB
 	for ; i < slices; i++ {
 		var partSize int64
@@ -1585,16 +1585,29 @@ func (c *FDSClient) SetObjectMetadata(bucketname string, objectname string, meta
 	return false, Model.NewFDSError(string(body), res.StatusCode)
 }
 
-func (c *FDSClient) Generate_Presigned_URI(bucketname, objectname, method string,
-	expiration int64, headers map[string][]string) (string, error) {
-	urlStr := c.GetBaseUri() + bucketname + DELIMITER +
-		objectname
+// Generate_Presigned_URI generates presigned uri
+// Deprecated: Use GeneratePresignedURI
+func (c *FDSClient) Generate_Presigned_URI(bucketname, objectname, method string, expiration int64, headers map[string][]string) (string, error) {
+	return c.GeneratePresignedURI(bucketname, objectname, method, nil, expiration, headers)
+}
+
+// GeneratePresignedURI generates presigned uri for all actions
+func (c *FDSClient) GeneratePresignedURI(bucketname, objectname, method string, subResources []string, expiration int64, headers map[string][]string) (string, error) {
+	var queryString string
+	if len(subResources) != 0 {
+		queryString = fmt.Sprintf("?%s", strings.Join(subResources, "&"))
+	}
+	if len(objectname) != 0 {
+		objectname = fmt.Sprintf("/%s", objectname)
+	}
+
+	urlStr := fmt.Sprintf("%s%s%s%s", c.GetBaseUri(), bucketname, objectname, queryString)
 
 	urlParsed, err := url.Parse(urlStr)
 	if err != nil {
 		return "", Model.NewFDSError(err.Error(), -1)
 	}
-	params := url.Values{}
+	params := urlParsed.Query()
 	if method == "HEAD" {
 		params.Add("metadata", "")
 	}
