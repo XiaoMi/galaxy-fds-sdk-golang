@@ -1460,24 +1460,41 @@ func (c *FDSClient) Upload_Part(initUploadPartResult *Model.InitMultipartUploadR
 	return Model.NewUploadPartResult(body)
 }
 
+// Complete_Multipart_Upload completes multipart upload
+// Deprecated: Use CompleteMultipartUpload
 func (c *FDSClient) Complete_Multipart_Upload(initPartuploadResult *Model.InitMultipartUploadResult,
 	uploadPartResultList *Model.UploadPartList) (*Model.PutObjectResult, error) {
-	bucketName := initPartuploadResult.BucketName
-	objectName := initPartuploadResult.ObjectName
-	uploadId := initPartuploadResult.UploadId
-	url := c.GetUploadURL() + bucketName + DELIMITER + objectName
+	return c.CompleteMultipartUpload(initPartuploadResult, http.Header{}, uploadPartResultList)
+}
+
+// CompleteMultipartUpload completes multipart upload
+func (c *FDSClient) CompleteMultipartUpload(initResult *Model.InitMultipartUploadResult,
+	metadata http.Header, uploadPartResultList *Model.UploadPartList) (*Model.PutObjectResult, error) {
+	bucketName := initResult.BucketName
+	objectName := initResult.ObjectName
+	uploadID := initResult.UploadId
+	url := fmt.Sprintf("%s%s/%s", c.GetUploadURL(), bucketName, objectName)
 	uploadPartResultListByteArray, err := json.Marshal(*uploadPartResultList)
 	if err != nil {
 		return nil, Model.NewFDSError(err.Error(), -1)
 	}
+
+	internalHeader := map[string]string{}
+	for k := range metadata {
+		if k != "Content-Type" {
+			internalHeader[k] = metadata.Get(k)
+		}
+	}
+
 	auth := FDSAuth{
-		UrlBase:     url,
-		Method:      "PUT",
-		Data:        uploadPartResultListByteArray,
-		Content_Md5: "",
-		Headers:     nil,
+		UrlBase:      url,
+		Method:       "PUT",
+		Data:         uploadPartResultListByteArray,
+		Content_Md5:  "",
+		Content_Type: metadata.Get("Content-Type"),
+		Headers:      &internalHeader,
 		Params: &map[string]string{
-			"uploadId": uploadId,
+			"uploadId": uploadID,
 		},
 	}
 	res, err := c.Auth(auth)
