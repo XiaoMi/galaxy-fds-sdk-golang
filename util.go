@@ -115,6 +115,9 @@ func (c *FDSClient) getUploadUriPrefix() string {
 }
 
 func (c *FDSClient) getUploadUriSuffix() string {
+	if c.EnableCDN {
+		return URI_FDS_CDN_SUFFIX
+	}
 	return URI_FDS_SUFFIX
 }
 
