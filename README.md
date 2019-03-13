@@ -16,7 +16,7 @@ go get github.com/XiaoMi/galaxy-fds-sdk-golang
 package main
 
 import (
-	"github.com/XiaoMi/galaxy-fds-sdk-golang"
+	fds "github.com/XiaoMi/galaxy-fds-sdk-golang"
 	"log"
 	"os"
 )
@@ -32,7 +32,7 @@ const (
 func main() {
 	objectName := "test_object"
 
-	client := galaxy_fds_sdk_golang.NEWFDSClient(APP_KEY, SECRET_KEY, REGION_NAME, END_POINT, false, false)
+	client := fds.NEWFDSClient(APP_KEY, SECRET_KEY, REGION_NAME, END_POINT, false, false)
 	client.Create_Bucket(BUCKET_NAME)
 	content := []byte("object content data")
 	result, err := client.Put_Object(BUCKET_NAME, objectName, content, "", nil)
