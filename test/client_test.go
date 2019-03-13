@@ -1,4 +1,4 @@
-package Test
+package test
 
 import (
 	"bytes"
@@ -12,16 +12,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/XiaoMi/galaxy-fds-sdk-golang"
+	fds "github.com/XiaoMi/galaxy-fds-sdk-golang"
 	"github.com/XiaoMi/galaxy-fds-sdk-golang/Model"
 )
 
-const (
-	APP_KEY     = "APP_KEY"
-	SECRET_KEY  = "SECRET_KEY"
-	BUCKET_NAME = "go-lang-test"
-	REGION_NAME = "cnbj0"
-	ENDPOINT    = "" // fds domain
+// Const
+var (
+	AppKey     = os.Getenv("FDS_AK")
+	SecretKey  = os.Getenv("FDS_SK")
+	BucketName = "go-lang-test"
+	Endpoint   = os.Getenv("FDS_ENDPOINT") // fds domain
 )
 
 func getObjectName4test() string {
@@ -29,18 +29,18 @@ func getObjectName4test() string {
 	return "golang-test-" + runtime.FuncForPC(pc).Name() + "-" + time.Now().Format(time.RFC3339)
 }
 
-var client *galaxy_fds_sdk_golang.FDSClient
+var client *fds.FDSClient
 
 func Test_Put_Get_Object(t *testing.T) {
 	objectName := getObjectName4test()
 
 	content := []byte("blah" + time.Now().Format(time.ANSIC))
-	_, err := client.Put_Object(BUCKET_NAME, objectName, content, "", nil)
+	_, err := client.Put_Object(BucketName, objectName, content, "", nil)
 	if err != nil {
 		t.Error("Fail to put object: "+objectName, err)
 	}
 
-	fdsobject, err := client.Get_Object(BUCKET_NAME, objectName, 0, -1)
+	fdsobject, err := client.Get_Object(BucketName, objectName, 0, -1)
 	if err != nil {
 		t.Error("Fail to get object: "+objectName, err)
 	}
@@ -53,7 +53,7 @@ func Test_Put_Get_Object(t *testing.T) {
 func Test_MultiPartUpload(t *testing.T) {
 	objectName := getObjectName4test()
 
-	initMultiPartResult, err := client.Init_MultiPart_Upload(BUCKET_NAME, objectName, "")
+	initMultiPartResult, err := client.Init_MultiPart_Upload(BucketName, objectName, "")
 	if err != nil {
 		t.Error("Fail to init multipart upload", err)
 	}
@@ -64,8 +64,8 @@ func Test_MultiPartUpload(t *testing.T) {
 	content[2] = make([]byte, 77777)
 
 	var uploadPartList Model.UploadPartList
-	for i, _ := range content {
-		for j, _ := range content[i] {
+	for i := range content {
+		for j := range content[i] {
 			content[i][j] = byte((i * j) ^ (i + j) - 7)
 		}
 		uploadPartResult, err := client.Upload_Part(initMultiPartResult, i+1, content[i])
@@ -84,7 +84,7 @@ func Test_MultiPartUpload(t *testing.T) {
 		t.Error("Fail to complete multipart upload", err)
 	}
 
-	fdsobject, err := client.Get_Object(BUCKET_NAME, objectName, 0, -1)
+	fdsobject, err := client.Get_Object(BucketName, objectName, 0, -1)
 	if err != nil {
 		t.Error("Fail to get object "+objectName, err)
 	}
@@ -96,7 +96,7 @@ func Test_MultiPartUpload(t *testing.T) {
 	}
 
 	// test abort interface
-	initMultiPartResult, err = client.Init_MultiPart_Upload(BUCKET_NAME, objectName, "")
+	initMultiPartResult, err = client.Init_MultiPart_Upload(BucketName, objectName, "")
 	if err != nil {
 		t.Error("Fail to init multipart upload")
 	}
@@ -126,10 +126,10 @@ func Test_ListObjects(t *testing.T) {
 	objectContent := []byte("blah")
 
 	for _, name := range objectName {
-		client.Put_Object(BUCKET_NAME, name, objectContent, "", nil)
+		client.Put_Object(BucketName, name, objectContent, "", nil)
 	}
 
-	listObjectResult, err := client.List_Object(BUCKET_NAME, "aab/", "/", 2)
+	listObjectResult, err := client.List_Object(BucketName, "aab/", "/", 2)
 	if err != nil {
 		t.Error("Fail to list objects")
 	}
@@ -138,7 +138,7 @@ func Test_ListObjects(t *testing.T) {
 		t.Error("list result should be empty")
 	}
 
-	listObjectResult, err = client.List_Object(BUCKET_NAME, "aaa/", "/", 4)
+	listObjectResult, err = client.List_Object(BucketName, "aaa/", "/", 4)
 	// expect:
 	// commonPrefixes: ["bbb", "ddd"]
 	// objectSummaries: []
@@ -179,12 +179,12 @@ func Test_DeleteObject(t *testing.T) {
 	objectName := getObjectName4test()
 	objectContent := "blah"
 
-	_, err := client.Put_Object(BUCKET_NAME, objectName, []byte(objectContent), "", nil)
+	_, err := client.Put_Object(BucketName, objectName, []byte(objectContent), "", nil)
 	if err != nil {
 		t.Error("Fail to put object: " + objectName)
 	}
 
-	exists, err := client.Is_Object_Exists(BUCKET_NAME, objectName)
+	exists, err := client.Is_Object_Exists(BucketName, objectName)
 	if err != nil {
 		t.Error("Fail to list object", err)
 	}
@@ -193,12 +193,12 @@ func Test_DeleteObject(t *testing.T) {
 		t.Error("Fail to find object" + objectName)
 	}
 
-	_, err = client.Delete_Object(BUCKET_NAME, objectName)
+	_, err = client.Delete_Object(BucketName, objectName)
 	if err != nil {
 		t.Error("Fail to delete object: "+objectName, err)
 	}
 
-	exists, err = client.Is_Object_Exists(BUCKET_NAME, objectName)
+	exists, err = client.Is_Object_Exists(BucketName, objectName)
 	if err != nil {
 		t.Error("Fail to list object"+objectName, err)
 	}
@@ -218,14 +218,14 @@ func Test_Metadata(t *testing.T) {
 		"wawawa":       "see the fear in my enemies' eyes",
 	}
 
-	_, err := client.Put_Object(BUCKET_NAME, objectName, []byte(objectContent),
+	_, err := client.Put_Object(BucketName, objectName, []byte(objectContent),
 		contentType,
 		&headers)
 	if err != nil {
 		t.Error("Fail to put object: "+objectName, err)
 	}
 
-	metadataGot, err := client.Get_Object_Meta(BUCKET_NAME, objectName)
+	metadataGot, err := client.Get_Object_Meta(BucketName, objectName)
 	if err != nil {
 		t.Error("Fail to get object meta for object: "+objectName, err)
 	}
@@ -258,9 +258,7 @@ func Test_Presigned_Url(t *testing.T) {
 	objectName := getObjectName4test()
 	objectContent := "blah"
 	contentType := "text/plain"
-	url, err := client.Generate_Presigned_URI(BUCKET_NAME,
-		objectName,
-		"PUT",
+	url, err := client.GeneratePresignedURI(BucketName, objectName, "PUT", []string{},
 		(time.Now().Add(time.Minute*5)).UnixNano()/int64(time.Millisecond),
 		map[string][]string{
 			"content-type": []string{contentType},
@@ -287,11 +285,8 @@ func Test_Presigned_Url(t *testing.T) {
 		t.Error("Fail to put through presigned url", err)
 	}
 
-	url, err = client.Generate_Presigned_URI(BUCKET_NAME,
-		objectName,
-		"GET",
-		time.Now().Add(time.Minute*5).UnixNano()/int64(time.Millisecond),
-		map[string][]string{})
+	url, err = client.GeneratePresignedURI(BucketName, objectName, "GET", []string{},
+		time.Now().Add(time.Minute*5).UnixNano()/int64(time.Millisecond), map[string][]string{})
 
 	if err != nil {
 		t.Error("Fail to get presigned url", err)
@@ -312,10 +307,10 @@ func Test_Presigned_Url(t *testing.T) {
 		t.Error("Fail to close response")
 	}
 	if strings.Compare(string(body), objectContent) != 0 {
-		t.Error(fmt.Sprintf("object content changed, expect: %s, got: %s", objectContent, string(body)))
+		t.Errorf("object content changed, expect: %s, got: %s", objectContent, string(body))
 	}
 
-	url, err = client.Generate_Presigned_URI(BUCKET_NAME, objectName,
+	url, err = client.Generate_Presigned_URI(BucketName, objectName,
 		"HEAD",
 		time.Now().Add(time.Minute*5).UnixNano()/int64(time.Millisecond),
 		map[string][]string{})
@@ -332,9 +327,9 @@ func Test_Presigned_Url(t *testing.T) {
 
 	fmt.Printf("%v\n", res.Header)
 
-	contentLength, err := strconv.Atoi(res.Header.Get("content-length"))
+	contentLength, err := strconv.Atoi(res.Header.Get("x-xiaomi-meta-content-length"))
 	if contentLength != len(objectContent) {
-		t.Error(fmt.Sprintf("content length check fail, expect: %d, got: %d", len(objectContent), contentLength))
+		t.Errorf("content length check fail, expect: %d, got: %d", len(objectContent), contentLength)
 	}
 }
 
@@ -344,7 +339,7 @@ func Test_List_Multipart_uploads(t *testing.T) {
 	contentType := "text/plain"
 	partNumber := 42
 
-	initResult, err := client.Init_MultiPart_Upload(BUCKET_NAME, objectName, contentType)
+	initResult, err := client.Init_MultiPart_Upload(BucketName, objectName, contentType)
 	if err != nil {
 		t.Error("Fail to init multipart", err)
 	}
@@ -353,7 +348,7 @@ func Test_List_Multipart_uploads(t *testing.T) {
 		t.Error("Fail to uplaod part", err)
 	}
 
-	listResult, err := client.List_Multipart_Uploads(BUCKET_NAME, objectName, "", 10)
+	listResult, err := client.List_Multipart_Uploads(BucketName, objectName, "", 10)
 	if err != nil {
 		t.Error("Fail to upload multipart", err)
 	}
@@ -366,7 +361,7 @@ func Test_List_Multipart_uploads(t *testing.T) {
 		t.Error("multi part upload id mismatch, expcect: " + initResult.UploadId + " got: " + listResult.Uploads[0].UploadId)
 	}
 
-	listParts, err := client.List_Parts(BUCKET_NAME, objectName, initResult.UploadId)
+	listParts, err := client.List_Parts(BucketName, objectName, initResult.UploadId)
 	if err != nil {
 		t.Error("Fail to list parts", err)
 	}
@@ -383,17 +378,17 @@ func Test_List_Multipart_uploads(t *testing.T) {
 	}
 }
 
-func clearOneBucket(client *galaxy_fds_sdk_golang.FDSClient) {
-	client.Delete_Objects_With_Prefix(BUCKET_NAME, "")
+func clearOneBucket(client *fds.FDSClient) {
+	client.Delete_Objects_With_Prefix(BucketName, "")
 }
 
 func setUpTest() {
-	exists, err := client.Is_Bucket_Exists(BUCKET_NAME)
+	exists, err := client.Is_Bucket_Exists(BucketName)
 	if err != nil {
 		if exists {
 			clearOneBucket(client)
 		} else {
-			client.Create_Bucket(BUCKET_NAME)
+			client.Create_Bucket(BucketName)
 		}
 	}
 }
@@ -403,10 +398,7 @@ func tearDown() {
 }
 
 func TestMain(m *testing.M) {
-	client = galaxy_fds_sdk_golang.NEWFDSClient(APP_KEY, SECRET_KEY,
-		REGION_NAME,
-		ENDPOINT,
-		false, false)
+	client = fds.NEWFDSClient(AppKey, SecretKey, "", Endpoint, false, false)
 	setUpTest()
 	r := m.Run()
 	tearDown()
