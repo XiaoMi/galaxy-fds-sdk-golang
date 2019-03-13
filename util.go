@@ -1605,7 +1605,7 @@ func (c *FDSClient) SetObjectMetadata(bucketname string, objectname string, meta
 // Generate_Presigned_URI generates presigned uri
 // Deprecated: Use GeneratePresignedURI
 func (c *FDSClient) Generate_Presigned_URI(bucketname, objectname, method string, expiration int64, headers map[string][]string) (string, error) {
-	return c.GeneratePresignedURI(bucketname, objectname, method, nil, expiration, headers)
+	return c.GeneratePresignedURI(bucketname, objectname, method, []string{}, expiration, headers)
 }
 
 // GeneratePresignedURI generates presigned uri for all actions
