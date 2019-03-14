@@ -13,7 +13,7 @@ func main() {
 	momentName := "b.mp4"
 	bucketName := "examples"
 	fdsClient := fds.NEWFDSClient(os.Getenv("FDS_AK"), os.Getenv("FDS_SK"), "", os.Getenv("FDS_ENDPOINT"), true, false)
-	_, err := fdsClient.Put_Object(bucketName, momentName, []byte(momentContent), "video/mp5", nil)
+	_, err := fdsClient.Put_Object(bucketName, momentName, []byte(momentContent), "video/mp4", nil)
 	if err != nil {
 		log.Fatalf("err = %v", err)
 		return

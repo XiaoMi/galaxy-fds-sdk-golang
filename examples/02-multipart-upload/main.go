@@ -30,7 +30,7 @@ func main() {
 	}
 
 	metadata := http.Header{}
-	metadata.Add("Content-Type", "video/mp66")
+	metadata.Add("Content-Type", "video/mp4")
 	completeResult, err := fdsClient.CompleteMultipartUpload(initResult, metadata, &resultList)
 	if err != nil {
 		log.Fatalf("failed to complete, %v\n", err)
