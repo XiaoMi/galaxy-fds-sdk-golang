@@ -5,10 +5,11 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
-	"github.com/XiaoMi/galaxy-fds-sdk-golang/Model"
 	"net/url"
 	"sort"
 	"strings"
+
+	"github.com/XiaoMi/galaxy-fds-sdk-golang/Model"
 )
 
 func getDateFromUrl(urlStr string) string {

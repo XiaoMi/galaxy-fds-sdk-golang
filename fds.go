@@ -1395,6 +1395,45 @@ func (c *FDSClient) Set_Public(bucketname, objectname string, disable_prefetch b
 	return true, nil
 }
 
+// InitMultipartUpload is a new interface to init multipart upload, I can not save this this library
+func (c *FDSClient) InitMultipartUpload(bucketName, objectName string, metadata http.Header) (*Model.InitMultipartUploadResult, error) {
+	url := c.GetUploadURL() + bucketName + DELIMITER + objectName
+	md5sum := fmt.Sprintf("%x", md5.Sum([]byte("")))
+	internalHeader := map[string]string{}
+	for k := range metadata {
+		if k != "Content-Type" {
+			internalHeader[k] = metadata.Get(k)
+		}
+	}
+	internalHeader["x-xiaomi-estimated-object-size"] = "1000000000"
+
+	auth := FDSAuth{
+		UrlBase:      url,
+		Method:       "PUT",
+		Data:         []byte(""),
+		Content_Md5:  md5sum,
+		Content_Type: "application/octet-stream",
+		Headers:      &internalHeader,
+		Params: &map[string]string{
+			"uploads": "",
+		},
+	}
+	res, err := c.Auth(auth)
+	if err != nil {
+		return nil, Model.NewFDSError(err.Error(), -1)
+	}
+	body, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		return nil, Model.NewFDSError(err.Error(), -1)
+	}
+	if res.StatusCode != 200 {
+		return nil, Model.NewFDSError(string(body), res.StatusCode)
+	}
+
+	return Model.NewInitMultipartUploadResult(body)
+}
+
 func (c *FDSClient) Init_MultiPart_Upload(bucketname, objectname string, contentType string) (*Model.InitMultipartUploadResult, error) {
 	url := c.GetUploadURL() + bucketname + DELIMITER + objectname
 	if contentType == "" {
