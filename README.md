@@ -1,7 +1,8 @@
 # Warning
 这个FDS client进入维护阶段，不会再添加新的功能，仅修复重大bug。
 
-对于新用户，请使用: [github.com/XiaoMi/go-fds](https://github.com/XiaoMi/go-fds)
+对于新用户，请使用: [github.com/XiaoMi/go-fds](https://github.com/XiaoMi/go-fds).
+
 对于老用户，如果有深度使用fds go client的需求，强烈建议迁移到新版。
 
 旧版本存在一下问题：
